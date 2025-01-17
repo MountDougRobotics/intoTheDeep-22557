@@ -12,14 +12,10 @@ public class TeleOpDrive {
     DcMotorEx[] motors = new DcMotorEx[4];
 
     public TeleOpDrive() {
-        motors[0] = hardwareMap.get(DcMotorEx.class, Config.frontLeft);
-        motors[1] = hardwareMap.get(DcMotorEx.class, Config.frontRight);
-        motors[2] = hardwareMap.get(DcMotorEx.class, Config.rearLeft);
-        motors[3] = hardwareMap.get(DcMotorEx.class, Config.rearRight);
-
-        motors[0].setDirection(DcMotorSimple.Direction.REVERSE);
-        motors[2].setDirection(DcMotorSimple.Direction.REVERSE);
-
+        motors[0] = Config.frontLeft;
+        motors[1] = Config.frontRight;
+        motors[2] = Config.rearLeft;
+        motors[3] = Config.rearRight;
     }
 
     public void drive(double x, double y, double r) {
