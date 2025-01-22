@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 public class Config {
     public static DcMotorEx frontLeft;
     public static DcMotorEx frontRight;
@@ -20,17 +22,23 @@ public class Config {
     public static CRServo intakeRight;
 
     public static HardwareMap hardwareMap;
+    public static Telemetry telemery;
 
     public static IMU imu;
+    public static double direction;
+    private static double lastAngles;
 
-    public static void initialize(HardwareMap hw) {
+
+
+    public static void initialize(HardwareMap hw, Telemetry tele) {
         hardwareMap = hw;
+        telemery = tele;
 
         imu = hardwareMap.get(IMU.class, "imu");
 
         imu.initialize(
                 new IMU.Parameters(new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                         RevHubOrientationOnRobot.UsbFacingDirection.UP
                 ))
         );
@@ -40,8 +48,9 @@ public class Config {
         rearLeft = hardwareMap.get(DcMotorEx.class, "rearLeft");
         rearRight = hardwareMap.get(DcMotorEx.class, "rearRight");
 
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        rearLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        rearRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -54,6 +63,9 @@ public class Config {
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        arm.setTargetPosition(0);
+        slide.setTargetPosition(0);
+
         arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -62,6 +74,36 @@ public class Config {
 
         intakeRight.setDirection(CRServo.Direction.REVERSE);
 
+    }
+
+    public void resetAngle()
+    {
+        lastAngles = imu.getRobotYawPitchRollAngles().getYaw();
+
+        direction = 0;
+    }
+
+    private double getAngle()
+    {
+        // We experimentally determined the Z axis is the axis we want to use for heading angle.
+        // We have to process the angle because the imu works in euler angles so the Z axis is
+        // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
+        // 180 degrees. We detect this transition and track the total cumulative angle of rotation.
+
+        double angles = imu.getRobotYawPitchRollAngles().getYaw();
+
+        double deltaAngle = angles - lastAngles;
+
+        if (deltaAngle < -180)
+            deltaAngle += 360;
+        else if (deltaAngle > 180)
+            deltaAngle -= 360;
+
+        direction += deltaAngle;
+
+        lastAngles = angles;
+
+        return direction;
     }
 
 
