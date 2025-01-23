@@ -63,6 +63,11 @@ public class Config {
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        arm.setDirection(DcMotorSimple.Direction.REVERSE);
+        slide.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        arm.setPower(1);
+        slide.setPower(1);
         arm.setTargetPosition(0);
         slide.setTargetPosition(0);
 
@@ -73,17 +78,16 @@ public class Config {
         intakeRight = hardwareMap.get(CRServo.class, "intakeRight");
 
         intakeRight.setDirection(CRServo.Direction.REVERSE);
-
     }
 
-    public void resetAngle()
+    public static void resetAngle()
     {
         lastAngles = imu.getRobotYawPitchRollAngles().getYaw();
 
         direction = 0;
     }
 
-    private double getAngle()
+    public static double getAngle()
     {
         // We experimentally determined the Z axis is the axis we want to use for heading angle.
         // We have to process the angle because the imu works in euler angles so the Z axis is

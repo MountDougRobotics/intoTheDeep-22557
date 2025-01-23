@@ -17,7 +17,7 @@ public class TeleOpDrive {
 
     public void drive(double x, double y, double r, double direction) {
         double theta = (Math.atan2(y, x) - Math.toRadians(direction));
-        double pow = Math.hypot(x, y)/(Math.hypot(1, 1));
+        double pow = Math.hypot(x, y);
 
         double xCom = pow * Math.cos(theta - Math.PI/4);
         double yCom = pow * Math.sin(theta - Math.PI/4);
@@ -33,8 +33,6 @@ public class TeleOpDrive {
         Config.telemery.addData("RL", motors[2].getPower());
         Config.telemery.addData("RR", motors[3].getPower());
         Config.telemery.addData("R", r);
-
-        Config.telemery.update();
 
     }
 
