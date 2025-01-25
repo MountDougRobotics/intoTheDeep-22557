@@ -2,10 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.drive.TeleOpDrive;
 
@@ -19,7 +16,7 @@ import org.firstinspires.ftc.teamcode.drive.TeleOpDrive;
  */
 
 @TeleOp(name="Tele Op v1")
-public class TeleOpTest extends OpMode {
+public class BasicTeleOp extends OpMode {
 
     TeleOpDrive drive;
     double intakePower = 0;
@@ -40,12 +37,15 @@ public class TeleOpTest extends OpMode {
 
     @Override
     public void loop() {
+
+        if(gamepad1.right_bumper){
+            Config.resetAngle();
+        }
+
         direction = Config.getAngle();
 
-        if(gamepad1.right_stick_x != 0){
+        if(gamepad1.right_stick_x != 0 || gamepad1.right_bumper){
             targetDirection = direction;
-
-            telemetry.addData("turning", "true");
         }
 
         rotation = ((Config.getAngle() - targetDirection) / 40) + gamepad1.right_stick_x;
@@ -55,19 +55,53 @@ public class TeleOpTest extends OpMode {
         drive.drive(gamepad1.left_stick_x, -gamepad1.left_stick_y, rotation, direction);
 
         if(gamepad2.left_stick_y != 0){
-            armPosition = Config.arm.getCurrentPosition() + (300.0 * gamepad2.left_stick_y);
-            //armPosition = Math.min((1440.0 * 6.0 * 0.6), armPosition);
+            armPosition = Config.arm.getCurrentPosition() - (300.0 * gamepad2.left_stick_y);
+        }
+
+        if(gamepad2.right_stick_x != 0){
+            slidePosition = Config.slide.getCurrentPosition() + (300.0 * gamepad2.right_stick_x);
+        }
+
+        if(!gamepad2.left_bumper){
+            armPosition = Math.min(3400, armPosition);
             armPosition = Math.max(0, armPosition);
+
+            if(2500 < armPosition) {
+                slidePosition = Math.min(3870, slidePosition);
+            } else {
+                slidePosition = Math.min(2000, slidePosition);
+            }
+
+            slidePosition = Math.max(0, slidePosition); // slide 1420 arm 300
+
+        }
+
+        if(gamepad2.right_bumper){
+
+            Config.arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            Config.slide.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            Config.arm.setPower(1);
+            Config.slide.setPower(1);
+            Config.arm.setTargetPosition(0);
+            Config.slide.setTargetPosition(0);
+
+            Config.arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            Config.slide.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            armPosition = 0;
+            slidePosition = 0;
+
+        }
+
+        if(gamepad2.a) {
+            armPosition = 300;
+            slidePosition = 1470;
+        } else if (gamepad2.b) {
+            armPosition = 3820;
+            slidePosition = 3870;
         }
 
         Config.arm.setTargetPosition((int) armPosition); // gamepad2.left_stick_y (int) armPosition
-
-        if(gamepad2.right_stick_y != 0){
-            slidePosition = Config.slide.getCurrentPosition() + (300.0 * gamepad2.right_stick_y);
-            //slidePosition = Math.min((1440.0 * 10), slidePosition);
-            //slidePosition = Math.max(0, slidePosition);
-        }
-
         Config.slide.setTargetPosition((int) slidePosition); // gamepad2.right_stick_y
 
         intakePower = (gamepad2.left_trigger - gamepad2.right_trigger);
@@ -77,11 +111,13 @@ public class TeleOpTest extends OpMode {
         Config.intakeRight.setPower(intakePower - 0.04);
 
         telemetry.addData("intakePower", intakePower);
+        telemetry.addData("armPosition", armPosition);
         telemetry.addData("slidePosition", slidePosition);
         telemetry.addData("armEncoder", Config.arm.getCurrentPosition());
         telemetry.addData("direction", Config.getAngle());
         telemetry.addData("targetDirection", targetDirection);
         telemetry.addData("rotation", rotation);
+        telemetry.addData("IMU YAW", Config.imu.getRobotYawPitchRollAngles().getYaw());
         telemetry.update();
 
         Config.arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
